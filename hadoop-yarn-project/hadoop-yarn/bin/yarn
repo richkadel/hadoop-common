@@ -49,12 +49,13 @@
 bin=`dirname "${BASH_SOURCE-$0}"`
 bin=`cd "$bin" > /dev/null; pwd`
 
+
 DEFAULT_LIBEXEC_DIR="$bin"/../libexec
 HADOOP_LIBEXEC_DIR=${HADOOP_LIBEXEC_DIR:-$DEFAULT_LIBEXEC_DIR}
 . $HADOOP_LIBEXEC_DIR/yarn-config.sh
 
 function print_usage(){
-  echo "Usage: yarn [--config confdir] COMMAND"
+  echo "Usage: yarn [--config confdir] [dryrun] COMMAND"
   echo "where COMMAND is one of:"
   echo "  resourcemanager      run the ResourceManager" 
   echo "  nodemanager          run a nodemanager on each slave" 
@@ -70,6 +71,9 @@ function print_usage(){
   echo " or"
   echo "  CLASSNAME            run the class named CLASSNAME"
   echo "Most commands print help when invoked w/o parameters."
+	echo ""
+  echo "  [dryrun]             if provided, prints the java command as it would"
+	echo "                       be executed, without actually executing it"
 }
 
 # if no args specified, show usage
@@ -81,6 +85,13 @@ fi
 # get arguments
 COMMAND=$1
 shift
+
+DRYRUN=
+if [ "$COMMAND" = "dryrun" ]; then
+	DRYRUN=echo
+	COMMAND=$1
+	shift
+fi
 
 case $COMMAND in
   # usage flags
@@ -217,6 +228,9 @@ elif [ "$COMMAND" = "daemonlog" ] ; then
   YARN_OPTS="$YARN_OPTS $YARN_CLIENT_OPTS"
 else
   CLASS=$COMMAND
+  # Assume it is desirable to include YARN_CLIENT_OPTS with an arbitrary
+  # client-local Java class passed to this yarn script
+  YARN_OPTS="$YARN_OPTS $YARN_CLIENT_OPTS"
 fi
 
 YARN_OPTS="$YARN_OPTS -Dhadoop.log.dir=$YARN_LOG_DIR"
@@ -231,5 +245,4 @@ if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then
   YARN_OPTS="$YARN_OPTS -Djava.library.path=$JAVA_LIBRARY_PATH"
 fi  
 
-exec "$JAVA" -Dproc_$COMMAND $JAVA_HEAP_MAX $YARN_OPTS -classpath "$CLASSPATH" $CLASS "$@"
-fi
+$DRYRUN exec "$JAVA" -Dproc_$COMMAND $JAVA_HEAP_MAX $YARN_OPTS -classpath "$CLASSPATH" $CLASS "$@"
