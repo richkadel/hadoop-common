@@ -123,8 +123,14 @@ case $COMMAND in
     fi
     shift
     
-    # Always respect HADOOP_OPTS and HADOOP_CLIENT_OPTS
-    HADOOP_OPTS="$HADOOP_OPTS $HADOOP_CLIENT_OPTS"
+    # # Always respect HADOOP_OPTS and HADOOP_CLIENT_OPTS
+# BUG: hadoop-env.sh (called from hadoop-config.sh, called from here)
+# already copied HADOOP_CLIENT_OPTS into HADOOP_OPTS and the following
+# line causes duplication, which can break things like -Xrunjdwp
+# so I am commenting it out prior to validating decision to
+# REMOVE THE LINE BELOW AND THE INDENTED COMMENT ABOVE
+    # HADOOP_OPTS="$HADOOP_OPTS $HADOOP_CLIENT_OPTS"
+
 
     #make sure security appender is turned off
     HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.security.logger=${HADOOP_SECURITY_LOGGER:-INFO,NullAppender}"
