@@ -47,9 +47,21 @@ then
 	      YARN_CONF_DIR=$confdir
     fi
 fi
+
+if [ -z "$HADOOP_YARN_HOME" ] && [ -z "$YARN_CONF_DIR" ]; then
+	YARN_CONF_DIR=$HADOOP_CONF_DIR # set by hadoop-config.sh
+fi
  
+export HADOOP_YARN_HOME="${HADOOP_YARN_HOME:-$HADOOP_COMMON_HOME}"
+
 # Allow alternate conf dir location.
-export YARN_CONF_DIR="${HADOOP_CONF_DIR:-$HADOOP_YARN_HOME/conf}"
+if [ -e "${HADOOP_YARN_HOME}/conf/hadoop-env.sh" ]; then
+  DEFAULT_CONF_DIR="conf"
+else
+  DEFAULT_CONF_DIR="etc/hadoop"
+fi
+
+export YARN_CONF_DIR="${YARN_CONF_DIR:-$HADOOP_YARN_HOME/$DEFAULT_CONF_DIR}"
 
 #check to see it is specified whether to use the slaves or the
 # masters file
